@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>ComfyUI Mobile</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ComfyUI">
+<meta name="theme-color" content="#0f1115">
+<style>
+:root {
+  --bg: #0f1115;
+  --card-bg: #1a1d24;
+  --border: #2a2e38;
+  --text: #e8e9ed;
+  --text-dim: #9aa0ac;
+  --accent: #6c5ce7;
+  --accent-dim: #4c3ce8;
+  --danger: #e75c5c;
+  --ok: #4caf7d;
+  --radius: 14px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  height: 100%;
+}
+
+body {
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  overscroll-behavior-y: none;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  display: inline-block;
+}
+.dot.ok { background: var(--ok); }
+.dot.bad { background: var(--danger); }
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1.3rem;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.tabbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px 0;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+#app, #explorerView {
+  padding: 12px 14px 90px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.card-title {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.card-row {
+  margin-bottom: 10px;
+}
+.card-row:last-child { margin-bottom: 0; }
+
+.buttons-row {
+  display: flex;
+  gap: 10px;
+}
+.buttons-row .btn { flex: 1; }
+
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+
+.field-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 8px 0 0;
+  line-height: 1.4;
+}
+
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  background: #12141a;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+textarea { resize: vertical; }
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.seed-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.seed-row input[type="number"] { flex: 1; }
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.advanced summary {
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin: 4px 0 12px;
+}
+
+.advanced[open] summary { margin-bottom: 14px; }
+
+#rawJsonArea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  min-height: 160px;
+}
+
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 13px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: white;
+  width: 100%;
+}
+.btn.primary:disabled {
+  background: #3a3d46;
+  color: var(--text-dim);
+}
+
+.btn.secondary {
+  background: #262a33;
+  color: var(--text);
+}
+
+.btn.secondary.danger {
+  color: var(--danger);
+}
+
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px 14px calc(10px + var(--safe-bottom));
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+  z-index: 10;
+}
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.gallery img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.media-item img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: block;
+}
+
+.media-caption {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-dim);
+  margin-top: 60px;
+  font-size: 0.95rem;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
+  display: flex;
+}
+
+.overlay[hidden] { display: none; }
+
+.drawer {
+  margin-top: auto;
+  width: 100%;
+  background: var(--card-bg);
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  padding: 20px 18px calc(20px + var(--safe-bottom));
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.drawer-header h2 { margin: 0; font-size: 1.1rem; }
+
+.lightbox {
+  margin: auto;
+  width: 100%;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 20px;
+  position: relative;
+}
+
+.lightbox img {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 50%;
+}
+
+code {
+  background: #12141a;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">
+    <span class="dot" id="connDot"></span>
+    ComfyUI
+  </div>
+  <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
+</header>
+
+<nav class="tabbar">
+  <button class="tab-btn active" id="tabGenerateBtn">Generate</button>
+  <button class="tab-btn" id="tabExplorerBtn">Explorer</button>
+</nav>
+
+<main id="app">
+
+  <!-- Workflow picker -->
+  <section class="card">
+    <div class="card-row">
+      <label class="field-label" for="workflowSelect">Workflow</label>
+      <select id="workflowSelect"></select>
+    </div>
+    <div class="card-row buttons-row">
+      <button class="btn secondary" id="importWorkflowBtn">Import…</button>
+      <button class="btn secondary danger" id="deleteWorkflowBtn">Delete</button>
+      <input type="file" id="workflowFileInput" accept="application/json,.json" hidden>
+    </div>
+    <p class="hint" id="workflowHint">Import a workflow exported from ComfyUI in <b>API format</b> (Save (API Format), with dev mode enabled).</p>
+  </section>
+
+  <!-- Generation form -->
+  <section class="card" id="genForm" hidden>
+    <div class="field">
+      <label class="field-label" for="positivePrompt">Prompt</label>
+      <textarea id="positivePrompt" rows="3" placeholder="A photo of…"></textarea>
+    </div>
+
+    <div class="field" id="negativeField" hidden>
+      <label class="field-label" for="negativePrompt">Negative prompt</label>
+      <textarea id="negativePrompt" rows="2" placeholder="blurry, low quality…"></textarea>
+    </div>
+
+    <div class="field" id="checkpointField" hidden>
+      <label class="field-label" for="checkpointSelect">Checkpoint</label>
+      <select id="checkpointSelect"></select>
+    </div>
+
+    <div class="grid2" id="sizeField" hidden>
+      <div class="field">
+        <label class="field-label" for="widthInput">Width</label>
+        <input type="number" id="widthInput" step="8" min="64">
+      </div>
+      <div class="field">
+        <label class="field-label" for="heightInput">Height</label>
+        <input type="number" id="heightInput" step="8" min="64">
+      </div>
+    </div>
+
+    <details class="advanced" id="advancedDetails">
+      <summary>Advanced</summary>
+
+      <div class="grid2" id="samplerField" hidden>
+        <div class="field">
+          <label class="field-label" for="samplerSelect">Sampler</label>
+          <select id="samplerSelect"></select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="schedulerSelect">Scheduler</label>
+          <select id="schedulerSelect"></select>
+        </div>
+      </div>
+
+      <div class="grid2" id="stepsCfgField" hidden>
+        <div class="field">
+          <label class="field-label" for="stepsInput">Steps</label>
+          <input type="number" id="stepsInput" min="1">
+        </div>
+        <div class="field">
+          <label class="field-label" for="cfgInput">CFG</label>
+          <input type="number" id="cfgInput" step="0.1" min="0">
+        </div>
+      </div>
+
+      <div class="field" id="seedField" hidden>
+        <label class="field-label" for="seedInput">Seed</label>
+        <div class="seed-row">
+          <input type="number" id="seedInput" min="0">
+          <label class="checkbox-label"><input type="checkbox" id="randomSeedCheckbox" checked> Random</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="rawJsonArea">Raw workflow JSON (editable)</label>
+        <textarea id="rawJsonArea" rows="6" spellcheck="false"></textarea>
+      </div>
+    </details>
+  </section>
+
+  <!-- Progress -->
+  <section class="card" id="progressCard" hidden>
+    <div class="progress-row">
+      <div class="spinner"></div>
+      <span id="progressText">Queuing…</span>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="card" id="galleryCard" hidden>
+    <h2 class="card-title">Results</h2>
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+  <p class="empty-state" id="emptyState">Import a workflow to get started.</p>
+
+</main>
+
+<main id="explorerView" hidden>
+  <section class="card">
+    <div class="card-row buttons-row">
+      <button class="btn secondary" id="refreshMediaBtn">Refresh from ComfyUI</button>
+      <button class="btn secondary danger" id="clearMediaBtn">Clear cache</button>
+    </div>
+    <p class="hint" id="mediaStatus"></p>
+    <p class="hint">Pulls everything in ComfyUI's history, so it includes images made outside this app too — but ComfyUI's history is in-memory, so it only covers what's run since ComfyUI last restarted (plus anything this app has already cached).</p>
+  </section>
+
+  <section class="card" id="mediaCard" hidden>
+    <div class="media-grid" id="mediaGrid"></div>
+  </section>
+
+  <p class="empty-state" id="mediaEmptyState">No images yet. Generate something, or tap Refresh.</p>
+</main>
+
+<div class="bottom-bar" id="bottomBar">
+  <button class="btn primary" id="generateBtn" disabled>Generate</button>
+</div>
+
+<!-- Settings drawer -->
+<div class="overlay" id="settingsOverlay" hidden>
+  <div class="drawer">
+    <div class="drawer-header">
+      <h2>Settings</h2>
+      <button class="icon-btn" id="closeSettingsBtn" aria-label="Close">✕</button>
+    </div>
+    <div class="field">
+      <label class="field-label" for="addressSelect">Saved addresses</label>
+      <select id="addressSelect"></select>
+    </div>
+    <div class="field">
+      <label class="field-label" for="baseUrlInput">ComfyUI address</label>
+      <input type="text" id="baseUrlInput" placeholder="my-pc.tailxxxx.ts.net:8188">
+    </div>
+    <div class="card-row buttons-row">
+      <button class="btn secondary" id="testConnBtn">Test connection</button>
+      <button class="btn secondary" id="saveAddressBtn">Save as…</button>
+      <button class="btn secondary danger" id="deleteAddressBtn">Delete</button>
+    </div>
+    <p class="hint" id="connStatus"></p>
+    <p class="hint">ComfyUI must be started with <code>--enable-cors-header</code> so this app (served from a different port) can call its API. See README.</p>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="overlay" id="lightboxOverlay" hidden>
+  <div class="lightbox">
+    <button class="icon-btn lightbox-close" id="closeLightboxBtn" aria-label="Close">✕</button>
+    <img id="lightboxImg" alt="Generated image">
+    <a id="lightboxOpenLink" class="btn secondary" target="_blank" rel="noopener">Open full size (save to Photos)</a>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ---------- storage ----------
+
+const STORE_KEY_SETTINGS = "comfyMob.settings";
+const STORE_KEY_WORKFLOWS = "comfyMob.workflows";
+const STORE_KEY_ADDRESSES = "comfyMob.addresses";
+
+function loadSettings() {
+  try {
+    return JSON.parse(localStorage.getItem(STORE_KEY_SETTINGS)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSettings(settings) {
+  localStorage.setItem(STORE_KEY_SETTINGS, JSON.stringify(settings));
+}
+
+function loadWorkflows() {
+  try {
+    return JSON.parse(localStorage.getItem(STORE_KEY_WORKFLOWS)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveWorkflows(workflows) {
+  localStorage.setItem(STORE_KEY_WORKFLOWS, JSON.stringify(workflows));
+}
+
+function loadAddresses() {
+  try {
+    return JSON.parse(localStorage.getItem(STORE_KEY_ADDRESSES)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAddresses(addresses) {
+  localStorage.setItem(STORE_KEY_ADDRESSES, JSON.stringify(addresses));
+}
+
+const STORE_KEY_MEDIA = "comfyMob.media";
+const MAX_MEDIA_ENTRIES = 500;
+
+function loadMedia() {
+  try {
+    return JSON.parse(localStorage.getItem(STORE_KEY_MEDIA)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMedia(media) {
+  localStorage.setItem(STORE_KEY_MEDIA, JSON.stringify(media.slice(0, MAX_MEDIA_ENTRIES)));
+}
+
+// ---------- state ----------
+
+let settings = loadSettings();
+let workflows = loadWorkflows();
+let addresses = loadAddresses();
+let media = loadMedia();
+let currentWorkflowName = null;
+let analysis = null; // result of analyzeWorkflow()
+let clientId = localStorage.getItem("comfyMob.clientId");
+if (!clientId) {
+  clientId = crypto.randomUUID();
+  localStorage.setItem("comfyMob.clientId", clientId);
+}
+
+// ---------- dom refs ----------
+
+const $ = (id) => document.getElementById(id);
+
+const connDot = $("connDot");
+const settingsBtn = $("settingsBtn");
+const settingsOverlay = $("settingsOverlay");
+const closeSettingsBtn = $("closeSettingsBtn");
+const baseUrlInput = $("baseUrlInput");
+const testConnBtn = $("testConnBtn");
+const connStatus = $("connStatus");
+const addressSelect = $("addressSelect");
+const saveAddressBtn = $("saveAddressBtn");
+const deleteAddressBtn = $("deleteAddressBtn");
+
+const workflowSelect = $("workflowSelect");
+const importWorkflowBtn = $("importWorkflowBtn");
+const deleteWorkflowBtn = $("deleteWorkflowBtn");
+const workflowFileInput = $("workflowFileInput");
+const workflowHint = $("workflowHint");
+
+const genForm = $("genForm");
+const positivePrompt = $("positivePrompt");
+const negativeField = $("negativeField");
+const negativePrompt = $("negativePrompt");
+const checkpointField = $("checkpointField");
+const checkpointSelect = $("checkpointSelect");
+const sizeField = $("sizeField");
+const widthInput = $("widthInput");
+const heightInput = $("heightInput");
+const samplerField = $("samplerField");
+const samplerSelect = $("samplerSelect");
+const schedulerSelect = $("schedulerSelect");
+const stepsCfgField = $("stepsCfgField");
+const stepsInput = $("stepsInput");
+const cfgInput = $("cfgInput");
+const seedField = $("seedField");
+const seedInput = $("seedInput");
+const randomSeedCheckbox = $("randomSeedCheckbox");
+const rawJsonArea = $("rawJsonArea");
+
+const generateBtn = $("generateBtn");
+const progressCard = $("progressCard");
+const progressText = $("progressText");
+const galleryCard = $("galleryCard");
+const gallery = $("gallery");
+const emptyState = $("emptyState");
+
+const lightboxOverlay = $("lightboxOverlay");
+const lightboxImg = $("lightboxImg");
+const lightboxOpenLink = $("lightboxOpenLink");
+const closeLightboxBtn = $("closeLightboxBtn");
+
+const tabGenerateBtn = $("tabGenerateBtn");
+const tabExplorerBtn = $("tabExplorerBtn");
+const appView = $("app");
+const explorerView = $("explorerView");
+const bottomBar = $("bottomBar");
+const refreshMediaBtn = $("refreshMediaBtn");
+const clearMediaBtn = $("clearMediaBtn");
+const mediaStatus = $("mediaStatus");
+const mediaCard = $("mediaCard");
+const mediaGrid = $("mediaGrid");
+const mediaEmptyState = $("mediaEmptyState");
+
+// ---------- tabs ----------
+
+function showGenerateTab() {
+  appView.hidden = false;
+  explorerView.hidden = true;
+  bottomBar.hidden = false;
+  tabGenerateBtn.classList.add("active");
+  tabExplorerBtn.classList.remove("active");
+}
+
+function showExplorerTab() {
+  appView.hidden = true;
+  explorerView.hidden = false;
+  bottomBar.hidden = true;
+  tabGenerateBtn.classList.remove("active");
+  tabExplorerBtn.classList.add("active");
+  renderMediaGrid();
+  if (media.length === 0 && baseUrl()) refreshMediaFromComfy();
+}
+
+tabGenerateBtn.addEventListener("click", showGenerateTab);
+tabExplorerBtn.addEventListener("click", showExplorerTab);
+
+// ---------- settings drawer ----------
+
+function baseUrl() {
+  return (settings.baseUrl || "").replace(/\/+$/, "");
+}
+
+function refreshAddressSelect() {
+  const names = Object.keys(addresses);
+  addressSelect.innerHTML = "";
+  const blank = document.createElement("option");
+  blank.value = "";
+  blank.textContent = names.length ? "— pick a saved address —" : "No saved addresses yet";
+  addressSelect.appendChild(blank);
+  for (const name of names) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = `${name} (${addresses[name]})`;
+    if (addresses[name] === settings.baseUrl) opt.selected = true;
+    addressSelect.appendChild(opt);
+  }
+}
+
+addressSelect.addEventListener("change", () => {
+  const name = addressSelect.value;
+  if (name && addresses[name]) baseUrlInput.value = addresses[name];
+});
+
+saveAddressBtn.addEventListener("click", () => {
+  const url = normalizeUrl(baseUrlInput.value);
+  if (!url) {
+    connStatus.textContent = "Enter an address first.";
+    return;
+  }
+  baseUrlInput.value = url;
+  const name = prompt("Name this address (e.g. \"Local\" or \"Tailscale\"):", addressSelect.value || "");
+  if (!name) return;
+  addresses[name] = url;
+  saveAddresses(addresses);
+  refreshAddressSelect();
+  addressSelect.value = name;
+});
+
+deleteAddressBtn.addEventListener("click", () => {
+  const name = addressSelect.value;
+  if (!name || !addresses[name]) return;
+  if (!confirm(`Delete saved address "${name}"?`)) return;
+  delete addresses[name];
+  saveAddresses(addresses);
+  refreshAddressSelect();
+});
+
+function openSettings() {
+  baseUrlInput.value = settings.baseUrl || "";
+  connStatus.textContent = "";
+  refreshAddressSelect();
+  settingsOverlay.hidden = false;
+}
+
+function closeSettings() {
+  settingsOverlay.hidden = true;
+}
+
+settingsBtn.addEventListener("click", openSettings);
+closeSettingsBtn.addEventListener("click", closeSettings);
+settingsOverlay.addEventListener("click", (e) => {
+  if (e.target === settingsOverlay) closeSettings();
+});
+
+function normalizeUrl(input) {
+  let url = input.trim().replace(/\/+$/, "");
+  if (url && !/^https?:\/\//i.test(url)) url = `http://${url}`;
+  return url;
+}
+
+async function testConnection() {
+  const url = normalizeUrl(baseUrlInput.value);
+  baseUrlInput.value = url;
+  if (!url) {
+    connStatus.textContent = "Enter an address first.";
+    return;
+  }
+  connStatus.textContent = "Testing…";
+  try {
+    const res = await fetch(`${url}/system_stats`, { mode: "cors" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await res.json();
+    settings.baseUrl = url;
+    saveSettings(settings);
+    connStatus.textContent = "Connected.";
+    updateConnDot(true);
+    if (currentWorkflowName) await populateDynamicOptions();
+    setTimeout(closeSettings, 700);
+  } catch (err) {
+    updateConnDot(false);
+    connStatus.textContent =
+      "Couldn't reach ComfyUI. Check the address, and make sure ComfyUI was started with --enable-cors-header (see README). " +
+      (err && err.message ? `(${err.message})` : "");
+  }
+}
+
+testConnBtn.addEventListener("click", testConnection);
+
+function updateConnDot(ok) {
+  connDot.classList.remove("ok", "bad");
+  connDot.classList.add(ok ? "ok" : "bad");
+}
+
+// ---------- workflow analysis ----------
+
+// Given API-format workflow JSON (object of nodeId -> {class_type, inputs}),
+// find the key nodes we know how to drive from a simple UI.
+function analyzeWorkflow(wf) {
+  const ids = Object.keys(wf);
+  const ksamplerId = ids.find((id) => (wf[id].class_type || "").startsWith("KSampler"));
+
+  const result = {
+    ksamplerId: null,
+    seedKey: null,
+    positiveId: null,
+    negativeId: null,
+    latentId: null,
+    checkpointId: null,
+    checkpointClass: null,
+  };
+
+  if (!ksamplerId) return result;
+  result.ksamplerId = ksamplerId;
+  const ksampler = wf[ksamplerId];
+  const inputs = ksampler.inputs || {};
+
+  result.seedKey = "seed" in inputs ? "seed" : ("noise_seed" in inputs ? "noise_seed" : null);
+
+  if (Array.isArray(inputs.positive)) result.positiveId = inputs.positive[0];
+  if (Array.isArray(inputs.negative)) result.negativeId = inputs.negative[0];
+
+  if (Array.isArray(inputs.latent_image)) {
+    const latentId = inputs.latent_image[0];
+    if (wf[latentId] && wf[latentId].class_type === "EmptyLatentImage") {
+      result.latentId = latentId;
+    }
+  }
+
+  // walk the model chain back to a checkpoint loader
+  let modelRef = inputs.model;
+  let depth = 0;
+  while (Array.isArray(modelRef) && depth < 8) {
+    const nodeId = modelRef[0];
+    const node = wf[nodeId];
+    if (!node) break;
+    if ((node.class_type || "").includes("CheckpointLoader")) {
+      result.checkpointId = nodeId;
+      result.checkpointClass = node.class_type;
+      break;
+    }
+    modelRef = node.inputs && node.inputs.model;
+    depth++;
+  }
+
+  return result;
+}
+
+// ---------- object_info lookups ----------
+
+const objectInfoCache = {};
+
+async function fetchNodeOptions(classType, inputName) {
+  const cacheKey = classType;
+  try {
+    if (!objectInfoCache[cacheKey]) {
+      const res = await fetch(`${baseUrl()}/object_info/${encodeURIComponent(classType)}`, { mode: "cors" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      objectInfoCache[cacheKey] = await res.json();
+    }
+    const info = objectInfoCache[cacheKey][classType];
+    const required = info && info.input && info.input.required;
+    const spec = required && required[inputName];
+    if (spec && Array.isArray(spec[0])) return spec[0];
+  } catch (err) {
+    console.warn("fetchNodeOptions failed", classType, inputName, err);
+  }
+  return null;
+}
+
+function fillSelect(select, options, selected) {
+  select.innerHTML = "";
+  for (const opt of options) {
+    const el = document.createElement("option");
+    el.value = opt;
+    el.textContent = opt;
+    if (opt === selected) el.selected = true;
+    select.appendChild(el);
+  }
+}
+
+async function populateDynamicOptions() {
+  if (!analysis || !baseUrl()) return;
+
+  if (analysis.checkpointId) {
+    const node = workflows[currentWorkflowName][analysis.checkpointId];
+    const current = node.inputs.ckpt_name;
+    const options = await fetchNodeOptions(analysis.checkpointClass, "ckpt_name");
+    if (options) {
+      fillSelect(checkpointSelect, options, current);
+      checkpointField.hidden = false;
+    } else {
+      checkpointField.hidden = true;
+    }
+  }
+
+  if (analysis.ksamplerId) {
+    const node = workflows[currentWorkflowName][analysis.ksamplerId];
+    const klass = node.class_type;
+    const samplerOptions = await fetchNodeOptions(klass, "sampler_name");
+    const schedulerOptions = await fetchNodeOptions(klass, "scheduler");
+    if (samplerOptions && schedulerOptions) {
+      fillSelect(samplerSelect, samplerOptions, node.inputs.sampler_name);
+      fillSelect(schedulerSelect, schedulerOptions, node.inputs.scheduler);
+      samplerField.hidden = false;
+    } else {
+      samplerField.hidden = true;
+    }
+  }
+}
+
+// ---------- workflow select/import/delete ----------
+
+function refreshWorkflowSelect() {
+  workflowSelect.innerHTML = "";
+  const names = Object.keys(workflows);
+  if (names.length === 0) {
+    const opt = document.createElement("option");
+    opt.textContent = "No workflows imported";
+    opt.disabled = true;
+    opt.selected = true;
+    workflowSelect.appendChild(opt);
+    workflowHint.hidden = false;
+    return;
+  }
+  for (const name of names) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    workflowSelect.appendChild(opt);
+  }
+  if (!currentWorkflowName || !workflows[currentWorkflowName]) {
+    currentWorkflowName = names[0];
+  }
+  workflowSelect.value = currentWorkflowName;
+}
+
+function loadWorkflowIntoForm(name) {
+  currentWorkflowName = name;
+  const wf = workflows[name];
+  if (!wf) {
+    genForm.hidden = true;
+    emptyState.hidden = false;
+    generateBtn.disabled = true;
+    return;
+  }
+
+  analysis = analyzeWorkflow(wf);
+  emptyState.hidden = true;
+  genForm.hidden = false;
+  generateBtn.disabled = false;
+  rawJsonArea.value = JSON.stringify(wf, null, 2);
+
+  if (analysis.positiveId) {
+    positivePrompt.value = wf[analysis.positiveId].inputs.text || "";
+  }
+  if (analysis.negativeId) {
+    negativeField.hidden = false;
+    negativePrompt.value = wf[analysis.negativeId].inputs.text || "";
+  } else {
+    negativeField.hidden = true;
+  }
+
+  if (analysis.latentId) {
+    const node = wf[analysis.latentId];
+    widthInput.value = node.inputs.width;
+    heightInput.value = node.inputs.height;
+    sizeField.hidden = false;
+  } else {
+    sizeField.hidden = true;
+  }
+
+  if (analysis.ksamplerId) {
+    const node = wf[analysis.ksamplerId];
+    stepsInput.value = node.inputs.steps ?? "";
+    cfgInput.value = node.inputs.cfg ?? "";
+    stepsCfgField.hidden = node.inputs.steps === undefined && node.inputs.cfg === undefined;
+    if (analysis.seedKey) {
+      seedInput.value = node.inputs[analysis.seedKey] ?? 0;
+      seedField.hidden = false;
+    } else {
+      seedField.hidden = true;
+    }
+  } else {
+    stepsCfgField.hidden = true;
+    seedField.hidden = true;
+  }
+
+  checkpointField.hidden = true;
+  samplerField.hidden = true;
+  if (baseUrl()) populateDynamicOptions();
+}
+
+workflowSelect.addEventListener("change", () => loadWorkflowIntoForm(workflowSelect.value));
+
+importWorkflowBtn.addEventListener("click", () => workflowFileInput.click());
+
+workflowFileInput.addEventListener("change", async () => {
+  const file = workflowFileInput.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const json = JSON.parse(text);
+    // basic sanity check: API-format workflows are an object of numeric-ish keys -> {class_type, inputs}
+    const values = Object.values(json);
+    if (values.length === 0 || !values.every((v) => v && typeof v.class_type === "string")) {
+      throw new Error("This doesn't look like an API-format workflow export (missing class_type on nodes).");
+    }
+    let name = file.name.replace(/\.json$/i, "");
+    if (workflows[name]) name = `${name} (${Date.now()})`;
+    workflows[name] = json;
+    saveWorkflows(workflows);
+    refreshWorkflowSelect();
+    workflowSelect.value = name;
+    loadWorkflowIntoForm(name);
+  } catch (err) {
+    alert(`Couldn't import workflow: ${err.message}`);
+  } finally {
+    workflowFileInput.value = "";
+  }
+});
+
+deleteWorkflowBtn.addEventListener("click", () => {
+  if (!currentWorkflowName || !workflows[currentWorkflowName]) return;
+  if (!confirm(`Delete workflow "${currentWorkflowName}"?`)) return;
+  delete workflows[currentWorkflowName];
+  saveWorkflows(workflows);
+  currentWorkflowName = null;
+  refreshWorkflowSelect();
+  loadWorkflowIntoForm(workflowSelect.value);
+});
+
+// ---------- generate ----------
+
+function buildPatchedWorkflow() {
+  // Start from the raw JSON textarea, so manual edits there are respected.
+  const wf = JSON.parse(rawJsonArea.value);
+
+  if (analysis.positiveId && wf[analysis.positiveId]) {
+    wf[analysis.positiveId].inputs.text = positivePrompt.value;
+  }
+  if (analysis.negativeId && wf[analysis.negativeId]) {
+    wf[analysis.negativeId].inputs.text = negativePrompt.value;
+  }
+  if (analysis.checkpointId && wf[analysis.checkpointId] && !checkpointField.hidden) {
+    wf[analysis.checkpointId].inputs.ckpt_name = checkpointSelect.value;
+  }
+  if (analysis.latentId && wf[analysis.latentId]) {
+    wf[analysis.latentId].inputs.width = Number(widthInput.value);
+    wf[analysis.latentId].inputs.height = Number(heightInput.value);
+  }
+  if (analysis.ksamplerId && wf[analysis.ksamplerId]) {
+    const node = wf[analysis.ksamplerId];
+    if (stepsInput.value !== "") node.inputs.steps = Number(stepsInput.value);
+    if (cfgInput.value !== "") node.inputs.cfg = Number(cfgInput.value);
+    if (!samplerField.hidden) {
+      node.inputs.sampler_name = samplerSelect.value;
+      node.inputs.scheduler = schedulerSelect.value;
+    }
+    if (analysis.seedKey) {
+      const seed = randomSeedCheckbox.checked
+        ? Math.floor(Math.random() * 2 ** 32)
+        : Number(seedInput.value);
+      node.inputs[analysis.seedKey] = seed;
+      seedInput.value = seed;
+    }
+  }
+
+  return wf;
+}
+
+async function queuePrompt(wf) {
+  const res = await fetch(`${baseUrl()}/prompt`, {
+    method: "POST",
+    mode: "cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt: wf, client_id: clientId }),
+  });
+  const body = await res.json();
+  if (!res.ok || body.error) {
+    const detail = body.node_errors ? JSON.stringify(body.node_errors) : (body.error || `HTTP ${res.status}`);
+    throw new Error(`ComfyUI rejected the prompt: ${detail}`);
+  }
+  return body.prompt_id;
+}
+
+async function pollHistory(promptId) {
+  while (true) {
+    const res = await fetch(`${baseUrl()}/history/${promptId}`, { mode: "cors" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const history = await res.json();
+    const entry = history[promptId];
+    if (entry) {
+      const status = entry.status || {};
+      if (status.completed || status.status_str === "success" || entry.outputs) {
+        return entry;
+      }
+      if (status.status_str === "error") {
+        throw new Error("Generation failed. Check ComfyUI's console for details.");
+      }
+    }
+    progressText.textContent = "Rendering…";
+    await new Promise((r) => setTimeout(r, 1200));
+  }
+}
+
+function imageUrl({ filename, subfolder, type }) {
+  const params = new URLSearchParams({ filename, subfolder: subfolder || "", type: type || "output" });
+  return `${baseUrl()}/view?${params.toString()}`;
+}
+
+function extractImages(historyEntry) {
+  const urls = [];
+  const outputs = historyEntry.outputs || {};
+  for (const nodeId of Object.keys(outputs)) {
+    const images = outputs[nodeId].images || [];
+    for (const img of images) {
+      urls.push(imageUrl(img));
+    }
+  }
+  return urls;
+}
+
+// ---------- media explorer ----------
+
+function recordMedia(id, images, prompt) {
+  if (images.length === 0) return;
+  media = media.filter((entry) => entry.id !== id);
+  media.unshift({ id, ts: Date.now(), source: "app", prompt: prompt || null, images });
+  saveMedia(media);
+}
+
+async function refreshMediaFromComfy() {
+  refreshMediaBtn.disabled = true;
+  mediaStatus.textContent = "Refreshing…";
+  try {
+    const res = await fetch(`${baseUrl()}/history`, { mode: "cors" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const history = await res.json();
+    const knownIds = new Set(media.map((entry) => entry.id));
+    const ids = Object.keys(history).filter((id) => !knownIds.has(id));
+    const baseTs = Date.now();
+    ids.forEach((id, idx) => {
+      const images = extractImages(history[id]);
+      if (images.length === 0) return;
+      media.push({ id, ts: baseTs - (ids.length - idx), source: "comfy", prompt: null, images });
+    });
+    media.sort((a, b) => b.ts - a.ts);
+    saveMedia(media);
+    renderMediaGrid();
+    mediaStatus.textContent = `Loaded. ${media.length} generation(s) cached.`;
+  } catch (err) {
+    mediaStatus.textContent = `Couldn't refresh from ComfyUI (${err.message || err}).`;
+  } finally {
+    refreshMediaBtn.disabled = false;
+  }
+}
+
+function relativeTime(ts) {
+  const diffSec = Math.round((Date.now() - ts) / 1000);
+  if (diffSec < 60) return "just now";
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
+function renderMediaGrid() {
+  mediaGrid.innerHTML = "";
+  for (const entry of media) {
+    for (const url of entry.images) {
+      const item = document.createElement("div");
+      item.className = "media-item";
+      const img = document.createElement("img");
+      img.src = url;
+      img.loading = "lazy";
+      img.addEventListener("click", () => openLightbox(url));
+      const caption = document.createElement("div");
+      caption.className = "media-caption";
+      caption.textContent = entry.prompt ? `${entry.prompt} · ${relativeTime(entry.ts)}` : relativeTime(entry.ts);
+      item.appendChild(img);
+      item.appendChild(caption);
+      mediaGrid.appendChild(item);
+    }
+  }
+  mediaCard.hidden = mediaGrid.children.length === 0;
+  mediaEmptyState.hidden = mediaGrid.children.length !== 0;
+}
+
+refreshMediaBtn.addEventListener("click", () => {
+  if (!baseUrl()) {
+    openSettings();
+    return;
+  }
+  refreshMediaFromComfy();
+});
+
+clearMediaBtn.addEventListener("click", () => {
+  if (!confirm("Clear the locally cached media history? (Images stay on your ComfyUI PC — this only clears this app's cache.)")) return;
+  media = [];
+  saveMedia(media);
+  renderMediaGrid();
+  mediaStatus.textContent = "Cache cleared.";
+});
+
+function renderGallery(urls) {
+  gallery.innerHTML = "";
+  for (const url of urls) {
+    const img = document.createElement("img");
+    img.src = url;
+    img.loading = "lazy";
+    img.addEventListener("click", () => openLightbox(url));
+    gallery.appendChild(img);
+  }
+  galleryCard.hidden = urls.length === 0;
+}
+
+function openLightbox(url) {
+  lightboxImg.src = url;
+  lightboxOpenLink.href = url;
+  lightboxOverlay.hidden = false;
+}
+
+closeLightboxBtn.addEventListener("click", () => (lightboxOverlay.hidden = true));
+lightboxOverlay.addEventListener("click", (e) => {
+  if (e.target === lightboxOverlay) lightboxOverlay.hidden = true;
+});
+
+generateBtn.addEventListener("click", async () => {
+  if (!baseUrl()) {
+    openSettings();
+    return;
+  }
+  generateBtn.disabled = true;
+  progressCard.hidden = false;
+  progressText.textContent = "Queuing…";
+  try {
+    const wf = buildPatchedWorkflow();
+    const promptId = await queuePrompt(wf);
+    const entry = await pollHistory(promptId);
+    const urls = extractImages(entry);
+    renderGallery(urls);
+    recordMedia(promptId, urls, positivePrompt.value.trim());
+  } catch (err) {
+    alert(err.message || String(err));
+  } finally {
+    progressCard.hidden = true;
+    generateBtn.disabled = false;
+  }
+});
+
+// ---------- init ----------
+
+(async function init() {
+  if (settings.baseUrl) {
+    updateConnDot(false);
+    try {
+      const res = await fetch(`${baseUrl()}/system_stats`, { mode: "cors" });
+      updateConnDot(res.ok);
+    } catch {
+      updateConnDot(false);
+    }
+  }
+  refreshWorkflowSelect();
+  loadWorkflowIntoForm(workflowSelect.value);
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>ComfyUI Mobile</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ComfyUI">
+<meta name="theme-color" content="#0f1115">
+<link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-title">
+    <span class="dot" id="connDot"></span>
+    ComfyUI
+  </div>
+  <button class="icon-btn" id="settingsBtn" aria-label="Settings">⚙️</button>
+</header>
+
+<nav class="tabbar">
+  <button class="tab-btn active" id="tabGenerateBtn">Generate</button>
+  <button class="tab-btn" id="tabExplorerBtn">Explorer</button>
+</nav>
+
+<main id="app">
+
+  <!-- Workflow picker -->
+  <section class="card">
+    <div class="card-row">
+      <label class="field-label" for="workflowSelect">Workflow</label>
+      <select id="workflowSelect"></select>
+    </div>
+    <div class="card-row buttons-row">
+      <button class="btn secondary" id="importWorkflowBtn">Import…</button>
+      <button class="btn secondary danger" id="deleteWorkflowBtn">Delete</button>
+      <input type="file" id="workflowFileInput" accept="application/json,.json" hidden>
+    </div>
+    <p class="hint" id="workflowHint">Import a workflow exported from ComfyUI in <b>API format</b> (Save (API Format), with dev mode enabled).</p>
+  </section>
+
+  <!-- Generation form -->
+  <section class="card" id="genForm" hidden>
+    <div class="field">
+      <label class="field-label" for="positivePrompt">Prompt</label>
+      <textarea id="positivePrompt" rows="3" placeholder="A photo of…"></textarea>
+    </div>
+
+    <div class="field" id="negativeField" hidden>
+      <label class="field-label" for="negativePrompt">Negative prompt</label>
+      <textarea id="negativePrompt" rows="2" placeholder="blurry, low quality…"></textarea>
+    </div>
+
+    <div class="field" id="checkpointField" hidden>
+      <label class="field-label" for="checkpointSelect">Checkpoint</label>
+      <select id="checkpointSelect"></select>
+    </div>
+
+    <div class="grid2" id="sizeField" hidden>
+      <div class="field">
+        <label class="field-label" for="widthInput">Width</label>
+        <input type="number" id="widthInput" step="8" min="64">
+      </div>
+      <div class="field">
+        <label class="field-label" for="heightInput">Height</label>
+        <input type="number" id="heightInput" step="8" min="64">
+      </div>
+    </div>
+
+    <details class="advanced" id="advancedDetails">
+      <summary>Advanced</summary>
+
+      <div class="grid2" id="samplerField" hidden>
+        <div class="field">
+          <label class="field-label" for="samplerSelect">Sampler</label>
+          <select id="samplerSelect"></select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="schedulerSelect">Scheduler</label>
+          <select id="schedulerSelect"></select>
+        </div>
+      </div>
+
+      <div class="grid2" id="stepsCfgField" hidden>
+        <div class="field">
+          <label class="field-label" for="stepsInput">Steps</label>
+          <input type="number" id="stepsInput" min="1">
+        </div>
+        <div class="field">
+          <label class="field-label" for="cfgInput">CFG</label>
+          <input type="number" id="cfgInput" step="0.1" min="0">
+        </div>
+      </div>
+
+      <div class="field" id="seedField" hidden>
+        <label class="field-label" for="seedInput">Seed</label>
+        <div class="seed-row">
+          <input type="number" id="seedInput" min="0">
+          <label class="checkbox-label"><input type="checkbox" id="randomSeedCheckbox" checked> Random</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="rawJsonArea">Raw workflow JSON (editable)</label>
+        <textarea id="rawJsonArea" rows="6" spellcheck="false"></textarea>
+      </div>
+    </details>
+  </section>
+
+  <!-- Progress -->
+  <section class="card" id="progressCard" hidden>
+    <div class="progress-row">
+      <div class="spinner"></div>
+      <span id="progressText">Queuing…</span>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="card" id="galleryCard" hidden>
+    <h2 class="card-title">Results</h2>
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+  <p class="empty-state" id="emptyState">Import a workflow to get started.</p>
+
+</main>
+
+<main id="explorerView" hidden>
+  <section class="card">
+    <div class="card-row buttons-row">
+      <button class="btn secondary" id="refreshMediaBtn">Refresh from ComfyUI</button>
+      <button class="btn secondary danger" id="clearMediaBtn">Clear cache</button>
+    </div>
+    <p class="hint" id="mediaStatus"></p>
+    <p class="hint">Pulls everything in ComfyUI's history, so it includes images made outside this app too — but ComfyUI's history is in-memory, so it only covers what's run since ComfyUI last restarted (plus anything this app has already cached).</p>
+  </section>
+
+  <section class="card" id="mediaCard" hidden>
+    <div class="media-grid" id="mediaGrid"></div>
+  </section>
+
+  <p class="empty-state" id="mediaEmptyState">No images yet. Generate something, or tap Refresh.</p>
+</main>
+
+<div class="bottom-bar" id="bottomBar">
+  <button class="btn primary" id="generateBtn" disabled>Generate</button>
+</div>
+
+<!-- Settings drawer -->
+<div class="overlay" id="settingsOverlay" hidden>
+  <div class="drawer">
+    <div class="drawer-header">
+      <h2>Settings</h2>
+      <button class="icon-btn" id="closeSettingsBtn" aria-label="Close">✕</button>
+    </div>
+    <div class="field">
+      <label class="field-label" for="addressSelect">Saved addresses</label>
+      <select id="addressSelect"></select>
+    </div>
+    <div class="field">
+      <label class="field-label" for="baseUrlInput">ComfyUI address</label>
+      <input type="text" id="baseUrlInput" placeholder="my-pc.tailxxxx.ts.net:8188">
+    </div>
+    <div class="card-row buttons-row">
+      <button class="btn secondary" id="testConnBtn">Test connection</button>
+      <button class="btn secondary" id="saveAddressBtn">Save as…</button>
+      <button class="btn secondary danger" id="deleteAddressBtn">Delete</button>
+    </div>
+    <p class="hint" id="connStatus"></p>
+    <p class="hint">ComfyUI must be started with <code>--enable-cors-header</code> so this app (served from a different port) can call its API. See README.</p>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="overlay" id="lightboxOverlay" hidden>
+  <div class="lightbox">
+    <button class="icon-btn lightbox-close" id="closeLightboxBtn" aria-label="Close">✕</button>
+    <img id="lightboxImg" alt="Generated image">
+    <a id="lightboxOpenLink" class="btn secondary" target="_blank" rel="noopener">Open full size (save to Photos)</a>
+  </div>
+</div>
+
+<script src="app.js?v=2"></script>
+</body>
+</html>
