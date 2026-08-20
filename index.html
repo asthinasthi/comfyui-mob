@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ComfyUI">
 <meta name="theme-color" content="#0f1115">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -161,9 +161,10 @@
       <label class="field-label" for="addressSelect">Saved addresses</label>
       <select id="addressSelect"></select>
     </div>
-    <div class="field">
+    <div class="field suggest-wrap">
       <label class="field-label" for="baseUrlInput">ComfyUI address</label>
-      <input type="text" id="baseUrlInput" placeholder="my-pc.tailxxxx.ts.net:8188">
+      <input type="text" id="baseUrlInput" placeholder="my-pc.tailxxxx.ts.net:8188" autocomplete="off">
+      <ul class="suggest-list" id="addressHistoryList" hidden></ul>
     </div>
     <div class="card-row buttons-row">
       <button class="btn secondary" id="testConnBtn">Test connection</button>
@@ -184,6 +185,6 @@
   </div>
 </div>
 
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>

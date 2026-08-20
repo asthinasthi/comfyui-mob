@@ -42,6 +42,21 @@ function saveAddresses(addresses) {
   localStorage.setItem(STORE_KEY_ADDRESSES, JSON.stringify(addresses));
 }
 
+const STORE_KEY_ADDRESS_HISTORY = "comfyMob.addressHistory";
+const MAX_ADDRESS_HISTORY = 8;
+
+function loadAddressHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(STORE_KEY_ADDRESS_HISTORY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveAddressHistory(list) {
+  localStorage.setItem(STORE_KEY_ADDRESS_HISTORY, JSON.stringify(list.slice(0, MAX_ADDRESS_HISTORY)));
+}
+
 const STORE_KEY_MEDIA = "comfyMob.media";
 const MAX_MEDIA_ENTRIES = 500;
 
@@ -62,6 +77,7 @@ function saveMedia(media) {
 let settings = loadSettings();
 let workflows = loadWorkflows();
 let addresses = loadAddresses();
+let addressHistory = loadAddressHistory();
 let media = loadMedia();
 let currentWorkflowName = null;
 let analysis = null; // result of analyzeWorkflow()
@@ -85,6 +101,7 @@ const connStatus = $("connStatus");
 const addressSelect = $("addressSelect");
 const saveAddressBtn = $("saveAddressBtn");
 const deleteAddressBtn = $("deleteAddressBtn");
+const addressHistoryList = $("addressHistoryList");
 
 const workflowSelect = $("workflowSelect");
 const importWorkflowBtn = $("importWorkflowBtn");
@@ -233,6 +250,33 @@ function normalizeUrl(input) {
   return url;
 }
 
+function recordAddressHistory(url) {
+  addressHistory = [url, ...addressHistory.filter((u) => u !== url)].slice(0, MAX_ADDRESS_HISTORY);
+  saveAddressHistory(addressHistory);
+}
+
+function renderAddressHistorySuggestions() {
+  addressHistoryList.innerHTML = "";
+  for (const url of addressHistory) {
+    const li = document.createElement("li");
+    li.textContent = url;
+    li.addEventListener("mousedown", (e) => e.preventDefault()); // keep focus so click fires before blur hides the list
+    li.addEventListener("click", () => {
+      baseUrlInput.value = url;
+      addressHistoryList.hidden = true;
+    });
+    addressHistoryList.appendChild(li);
+  }
+  return addressHistory.length > 0;
+}
+
+baseUrlInput.addEventListener("focus", () => {
+  addressHistoryList.hidden = !renderAddressHistorySuggestions();
+});
+baseUrlInput.addEventListener("blur", () => {
+  setTimeout(() => (addressHistoryList.hidden = true), 150);
+});
+
 async function testConnection() {
   const url = normalizeUrl(baseUrlInput.value);
   baseUrlInput.value = url;
@@ -247,6 +291,7 @@ async function testConnection() {
     await res.json();
     settings.baseUrl = url;
     saveSettings(settings);
+    recordAddressHistory(url);
     connStatus.textContent = "Connected.";
     updateConnDot(true);
     if (currentWorkflowName) await populateDynamicOptions();

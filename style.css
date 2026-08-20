@@ -364,6 +364,37 @@ select {
   border-radius: 50%;
 }
 
+.suggest-wrap {
+  position: relative;
+}
+
+.suggest-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin: 4px 0 0;
+  padding: 6px;
+  list-style: none;
+  background: #12141a;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  z-index: 20;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.suggest-list li {
+  padding: 10px 8px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.suggest-list li:active {
+  background: #262a33;
+}
+
 code {
   background: #12141a;
   padding: 1px 5px;
