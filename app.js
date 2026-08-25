@@ -118,6 +118,8 @@ const checkpointSelect = $("checkpointSelect");
 const sizeField = $("sizeField");
 const widthInput = $("widthInput");
 const heightInput = $("heightInput");
+const durationField = $("durationField");
+const durationInput = $("durationInput");
 const samplerField = $("samplerField");
 const samplerSelect = $("samplerSelect");
 const schedulerSelect = $("schedulerSelect");
@@ -327,7 +329,14 @@ function analyzeWorkflow(wf) {
     latentId: null,
     checkpointId: null,
     checkpointClass: null,
+    durationId: null,
   };
+
+  // video API nodes (e.g. MiniMax) expose duration directly in seconds, independent of any KSampler
+  result.durationId = ids.find((id) => {
+    const node = wf[id];
+    return (node.class_type || "").startsWith("Minimax") && node.inputs && "duration" in node.inputs;
+  }) || null;
 
   if (!ksamplerId) return result;
   result.ksamplerId = ksamplerId;
@@ -489,6 +498,13 @@ function loadWorkflowIntoForm(name) {
     sizeField.hidden = true;
   }
 
+  if (analysis.durationId) {
+    durationInput.value = wf[analysis.durationId].inputs.duration;
+    durationField.hidden = false;
+  } else {
+    durationField.hidden = true;
+  }
+
   if (analysis.ksamplerId) {
     const node = wf[analysis.ksamplerId];
     stepsInput.value = node.inputs.steps ?? "";
@@ -583,6 +599,9 @@ function buildPatchedWorkflow() {
       node.inputs[analysis.seedKey] = seed;
       seedInput.value = seed;
     }
+  }
+  if (analysis.durationId && wf[analysis.durationId] && durationInput.value !== "") {
+    wf[analysis.durationId].inputs.duration = Number(durationInput.value);
   }
 
   return wf;
