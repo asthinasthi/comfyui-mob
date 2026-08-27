@@ -9,6 +9,10 @@ It shows a simplified form (prompt, negative prompt, size, steps, cfg, sampler, 
 checkpoint) built from a workflow you export from ComfyUI, and a gallery of results. Anything
 the auto-detection can't map to a field is still editable as raw JSON under "Advanced".
 
+It also installs as a PWA (Add to Home Screen), and there's an optional native iOS
+wrapper in [`ios/`](ios/) that hosts this same web app in a `WKWebView` — see
+[ios/README.md](ios/README.md).
+
 **Limitation:** the auto-detected fields assume a standard single-`KSampler` txt2img graph
 (`CheckpointLoaderSimple` → `CLIPTextEncode` ×2 → `KSampler`/`KSamplerAdvanced` →
 `EmptyLatentImage` → `VAEDecode` → `SaveImage`). More exotic workflows (img2img, ControlNet,

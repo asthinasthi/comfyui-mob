@@ -1,0 +1,9 @@
+# Xcode / build artifacts
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcworkspace/xcuserdata/
+ComfyUIMobile.xcodeproj/xcuserdata/
+ComfyUIMobile.xcodeproj/project.xcworkspace/xcuserdata/
+.DS_Store
