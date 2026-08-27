@@ -801,3 +801,11 @@ generateBtn.addEventListener("click", async () => {
   refreshWorkflowSelect();
   loadWorkflowIntoForm(workflowSelect.value);
 })();
+
+// Register the service worker for offline app-shell caching (PWA). Skipped on
+// file:// (the standalone build), where service workers aren't available.
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch((err) => console.warn("SW registration failed", err));
+  });
+}
