@@ -147,10 +147,19 @@ const lightboxOpenLink = $("lightboxOpenLink");
 const closeLightboxBtn = $("closeLightboxBtn");
 
 const tabGenerateBtn = $("tabGenerateBtn");
+const tabQueueBtn = $("tabQueueBtn");
 const tabExplorerBtn = $("tabExplorerBtn");
+const queueBadge = $("queueBadge");
 const appView = $("app");
+const queueView = $("queueView");
 const explorerView = $("explorerView");
 const bottomBar = $("bottomBar");
+const refreshQueueBtn = $("refreshQueueBtn");
+const clearQueueBtn = $("clearQueueBtn");
+const queueStatus = $("queueStatus");
+const queueListCard = $("queueListCard");
+const queueList = $("queueList");
+const queueEmptyState = $("queueEmptyState");
 const refreshMediaBtn = $("refreshMediaBtn");
 const clearMediaBtn = $("clearMediaBtn");
 const mediaStatus = $("mediaStatus");
@@ -160,26 +169,31 @@ const mediaEmptyState = $("mediaEmptyState");
 
 // ---------- tabs ----------
 
-function showGenerateTab() {
-  appView.hidden = false;
-  explorerView.hidden = true;
-  bottomBar.hidden = false;
-  tabGenerateBtn.classList.add("active");
-  tabExplorerBtn.classList.remove("active");
+function setActiveTab(name) {
+  const isGen = name === "generate";
+  const isQueue = name === "queue";
+  const isExp = name === "explorer";
+
+  appView.hidden = !isGen;
+  queueView.hidden = !isQueue;
+  explorerView.hidden = !isExp;
+  bottomBar.hidden = !isGen;
+
+  tabGenerateBtn.classList.toggle("active", isGen);
+  tabQueueBtn.classList.toggle("active", isQueue);
+  tabExplorerBtn.classList.toggle("active", isExp);
+
+  stopQueuePolling();
+  if (isQueue) startQueuePolling();
+  if (isExp) {
+    renderMediaGrid();
+    if (media.length === 0 && baseUrl()) refreshMediaFromComfy();
+  }
 }
 
-function showExplorerTab() {
-  appView.hidden = true;
-  explorerView.hidden = false;
-  bottomBar.hidden = true;
-  tabGenerateBtn.classList.remove("active");
-  tabExplorerBtn.classList.add("active");
-  renderMediaGrid();
-  if (media.length === 0 && baseUrl()) refreshMediaFromComfy();
-}
-
-tabGenerateBtn.addEventListener("click", showGenerateTab);
-tabExplorerBtn.addEventListener("click", showExplorerTab);
+tabGenerateBtn.addEventListener("click", () => setActiveTab("generate"));
+tabQueueBtn.addEventListener("click", () => setActiveTab("queue"));
+tabExplorerBtn.addEventListener("click", () => setActiveTab("explorer"));
 
 // ---------- settings drawer ----------
 
@@ -299,6 +313,7 @@ async function testConnection() {
     recordAddressHistory(url);
     connStatus.textContent = "Connected.";
     updateConnDot(true);
+    fetchQueueCounts();
     if (currentWorkflowName) await populateDynamicOptions();
     setTimeout(closeSettings, 700);
   } catch (err) {
@@ -750,6 +765,174 @@ clearMediaBtn.addEventListener("click", () => {
   mediaStatus.textContent = "Cache cleared.";
 });
 
+// ---------- queue / jobs ----------
+
+let queuePollTimer = null;
+
+// Pull a human-readable label out of an API-format prompt (the workflow dict).
+function promptLabel(prompt) {
+  if (!prompt || typeof prompt !== "object") return null;
+  let clipText = null;
+  for (const node of Object.values(prompt)) {
+    if (!node || !node.inputs) continue;
+    const ct = node.class_type || "";
+    if (ct.startsWith("Minimax") && typeof node.inputs.prompt_text === "string" && node.inputs.prompt_text.trim()) {
+      return node.inputs.prompt_text.trim();
+    }
+    if (ct === "CLIPTextEncode" && typeof node.inputs.text === "string" && node.inputs.text.trim() && !clipText) {
+      clipText = node.inputs.text.trim();
+    }
+  }
+  return clipText;
+}
+
+// A /queue entry is [number, prompt_id, prompt, extra_data, outputs_to_execute].
+function queueEntryToJob(entry, status) {
+  return { number: entry[0], id: entry[1], label: promptLabel(entry[2]), status };
+}
+
+function updateQueueBadge(count) {
+  if (count > 0) {
+    queueBadge.textContent = String(count);
+    queueBadge.hidden = false;
+  } else {
+    queueBadge.hidden = true;
+  }
+}
+
+async function fetchQueueCounts() {
+  // Lightweight badge refresh usable from anywhere (e.g. right after submitting).
+  if (!baseUrl()) return;
+  try {
+    const res = await fetch(`${baseUrl()}/queue`, { mode: "cors" });
+    if (!res.ok) return;
+    const q = await res.json();
+    updateQueueBadge((q.queue_running?.length || 0) + (q.queue_pending?.length || 0));
+  } catch {
+    /* ignore — badge just won't update */
+  }
+}
+
+async function refreshQueue() {
+  if (!baseUrl()) {
+    queueStatus.textContent = "Set a ComfyUI address in Settings first.";
+    renderQueue([]);
+    return;
+  }
+  try {
+    const res = await fetch(`${baseUrl()}/queue`, { mode: "cors" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const q = await res.json();
+    const jobs = [
+      ...(q.queue_running || []).map((e) => queueEntryToJob(e, "running")),
+      ...(q.queue_pending || []).map((e) => queueEntryToJob(e, "pending")),
+    ];
+    updateQueueBadge(jobs.length);
+    queueStatus.textContent = jobs.length
+      ? `${jobs.filter((j) => j.status === "running").length} running, ${jobs.filter((j) => j.status === "pending").length} queued.`
+      : "Queue is empty.";
+    renderQueue(jobs);
+  } catch (err) {
+    queueStatus.textContent = `Couldn't reach ComfyUI (${err.message || err}).`;
+  }
+}
+
+function renderQueue(jobs) {
+  queueList.innerHTML = "";
+  for (const job of jobs) {
+    const row = document.createElement("div");
+    row.className = "job-row";
+
+    const main = document.createElement("div");
+    main.className = "job-main";
+    const label = document.createElement("div");
+    label.className = "job-label";
+    label.textContent = job.label || "(no prompt text)";
+    const sub = document.createElement("div");
+    sub.className = "job-sub";
+    sub.textContent = `#${job.number} · ${job.id.slice(0, 8)}`;
+    main.appendChild(label);
+    main.appendChild(sub);
+
+    const badge = document.createElement("span");
+    badge.className = `job-badge ${job.status}`;
+    badge.textContent = job.status === "running" ? "Running" : "Pending";
+
+    const cancel = document.createElement("button");
+    cancel.className = "job-cancel";
+    cancel.textContent = job.status === "running" ? "Stop" : "Cancel";
+    cancel.addEventListener("click", () => cancelJob(job));
+
+    row.appendChild(main);
+    row.appendChild(badge);
+    row.appendChild(cancel);
+    queueList.appendChild(row);
+  }
+  queueListCard.hidden = jobs.length === 0;
+  queueEmptyState.hidden = jobs.length !== 0;
+}
+
+async function cancelJob(job) {
+  try {
+    if (job.status === "running") {
+      // Interrupt the currently executing prompt.
+      await fetch(`${baseUrl()}/interrupt`, { method: "POST", mode: "cors" });
+    } else {
+      // Remove a specific pending prompt from the queue.
+      await fetch(`${baseUrl()}/queue`, {
+        method: "POST",
+        mode: "cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ delete: [job.id] }),
+      });
+    }
+  } catch (err) {
+    alert(`Couldn't cancel job: ${err.message || err}`);
+  } finally {
+    refreshQueue();
+  }
+}
+
+function startQueuePolling() {
+  refreshQueue();
+  queuePollTimer = setInterval(refreshQueue, 1500);
+}
+
+function stopQueuePolling() {
+  if (queuePollTimer) {
+    clearInterval(queuePollTimer);
+    queuePollTimer = null;
+  }
+}
+
+refreshQueueBtn.addEventListener("click", refreshQueue);
+
+clearQueueBtn.addEventListener("click", async () => {
+  if (!baseUrl()) return;
+  if (!confirm("Clear all pending (queued) jobs? The running job is not affected.")) return;
+  try {
+    await fetch(`${baseUrl()}/queue`, {
+      method: "POST",
+      mode: "cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clear: true }),
+    });
+  } catch (err) {
+    alert(`Couldn't clear queue: ${err.message || err}`);
+  } finally {
+    refreshQueue();
+  }
+});
+
+// Pause polling when the app is backgrounded; resume when the Queue tab is visible again.
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    stopQueuePolling();
+  } else if (!queueView.hidden) {
+    startQueuePolling();
+  }
+});
+
 function renderGallery(urls) {
   gallery.innerHTML = "";
   for (const url of urls) {
@@ -784,6 +967,7 @@ generateBtn.addEventListener("click", async () => {
   try {
     const wf = buildPatchedWorkflow();
     const promptId = await queuePrompt(wf);
+    fetchQueueCounts(); // reflect the just-submitted job on the Queue tab badge
     const entry = await pollHistory(promptId);
     const urls = extractImages(entry);
     renderGallery(urls);
@@ -793,6 +977,7 @@ generateBtn.addEventListener("click", async () => {
   } finally {
     progressCard.hidden = true;
     generateBtn.disabled = false;
+    fetchQueueCounts(); // job left the queue (done/failed) — refresh the badge
   }
 });
 
@@ -804,6 +989,7 @@ generateBtn.addEventListener("click", async () => {
     try {
       const res = await fetch(`${baseUrl()}/system_stats`, { mode: "cors" });
       updateConnDot(res.ok);
+      if (res.ok) fetchQueueCounts(); // surface any pre-existing queue on the badge
     } catch {
       updateConnDot(false);
     }

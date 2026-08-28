@@ -97,7 +97,21 @@ body {
   border-bottom-color: var(--accent);
 }
 
-#app, #explorerView {
+.tab-badge {
+  display: inline-block;
+  min-width: 18px;
+  margin-left: 5px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.72rem;
+  line-height: 18px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+#app, #queueView, #explorerView {
   padding: 12px 14px 90px;
   max-width: 640px;
   margin: 0 auto;
@@ -430,6 +444,55 @@ select {
 
 .suggest-list li:active {
   background: #262a33;
+}
+
+/* Queue / jobs list */
+.job-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.job-row:last-child { border-bottom: none; }
+
+.job-main { flex: 1; min-width: 0; }
+
+.job-label {
+  font-size: 0.9rem;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.job-sub {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.job-badge {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.job-badge.running { background: rgba(108, 92, 231, 0.22); color: #b7acff; }
+.job-badge.pending { background: #262a33; color: var(--text-dim); }
+.job-badge.done    { background: rgba(76, 175, 125, 0.18); color: #7bd6a8; }
+.job-badge.error   { background: rgba(231, 92, 92, 0.18); color: #f0a0a0; }
+
+.job-cancel {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 4px 2px;
+  cursor: pointer;
 }
 
 code {

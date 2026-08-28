@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ComfyUI">
 <meta name="theme-color" content="#0f1115">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 
@@ -24,6 +24,7 @@
 
 <nav class="tabbar">
   <button class="tab-btn active" id="tabGenerateBtn">Generate</button>
+  <button class="tab-btn" id="tabQueueBtn">Queue<span class="tab-badge" id="queueBadge" hidden>0</span></button>
   <button class="tab-btn" id="tabExplorerBtn">Explorer</button>
 </nav>
 
@@ -128,6 +129,22 @@
 
 </main>
 
+<main id="queueView" hidden>
+  <section class="card">
+    <div class="card-row buttons-row">
+      <button class="btn secondary" id="refreshQueueBtn">Refresh</button>
+      <button class="btn secondary danger" id="clearQueueBtn">Clear pending</button>
+    </div>
+    <p class="hint" id="queueStatus"></p>
+  </section>
+
+  <section class="card" id="queueListCard" hidden>
+    <div id="queueList"></div>
+  </section>
+
+  <p class="empty-state" id="queueEmptyState">No jobs running or queued.</p>
+</main>
+
 <main id="explorerView" hidden>
   <section class="card">
     <div class="card-row buttons-row">
@@ -198,6 +215,6 @@
   </div>
 </div>
 
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
