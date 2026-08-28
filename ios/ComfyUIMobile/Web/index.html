@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ComfyUI">
 <meta name="theme-color" content="#0f1115">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -29,22 +29,13 @@
 
 <main id="app">
 
-  <!-- Workflow picker -->
-  <section class="card">
-    <div class="card-row">
-      <label class="field-label" for="workflowSelect">Workflow</label>
-      <select id="workflowSelect"></select>
-    </div>
-    <div class="card-row buttons-row">
-      <button class="btn secondary" id="importWorkflowBtn">Import…</button>
-      <button class="btn secondary danger" id="deleteWorkflowBtn">Delete</button>
-      <input type="file" id="workflowFileInput" accept="application/json,.json" hidden>
-    </div>
-    <p class="hint" id="workflowHint">Import a workflow exported from ComfyUI in <b>API format</b> (Save (API Format), with dev mode enabled).</p>
-  </section>
-
   <!-- Generation form -->
   <section class="card" id="genForm" hidden>
+    <div class="workflow-bar">
+      <span class="workflow-name" id="currentWorkflowLabel"></span>
+      <button class="link-btn" id="changeWorkflowBtn">Change</button>
+    </div>
+
     <div class="field">
       <label class="field-label" for="positivePrompt">Prompt</label>
       <textarea id="positivePrompt" rows="3" placeholder="A photo of…"></textarea>
@@ -130,7 +121,10 @@
     <div class="gallery" id="gallery"></div>
   </section>
 
-  <p class="empty-state" id="emptyState">Import a workflow to get started.</p>
+  <div class="empty-state" id="emptyState">
+    <p>No workflow loaded yet.</p>
+    <button class="btn secondary" id="emptyImportBtn">Import a workflow…</button>
+  </div>
 
 </main>
 
@@ -162,6 +156,20 @@
       <h2>Settings</h2>
       <button class="icon-btn" id="closeSettingsBtn" aria-label="Close">✕</button>
     </div>
+
+    <div class="field">
+      <label class="field-label" for="workflowSelect">Workflow</label>
+      <select id="workflowSelect"></select>
+    </div>
+    <div class="card-row buttons-row">
+      <button class="btn secondary" id="importWorkflowBtn">Import…</button>
+      <button class="btn secondary danger" id="deleteWorkflowBtn">Delete</button>
+      <input type="file" id="workflowFileInput" accept="application/json,.json" hidden>
+    </div>
+    <p class="hint" id="workflowHint">Import a workflow exported from ComfyUI in <b>API format</b> (Save (API Format), with dev mode enabled).</p>
+
+    <hr class="settings-divider">
+
     <div class="field">
       <label class="field-label" for="addressSelect">Saved addresses</label>
       <select id="addressSelect"></select>
@@ -190,6 +198,6 @@
   </div>
 </div>
 
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

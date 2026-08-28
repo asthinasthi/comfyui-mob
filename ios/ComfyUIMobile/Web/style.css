@@ -306,6 +306,43 @@ select {
   margin-top: 60px;
   font-size: 0.95rem;
 }
+.empty-state p { margin: 0 0 16px; }
+.empty-state .btn { display: inline-block; width: auto; }
+
+/* Compact current-workflow row at the top of the generation form */
+.workflow-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.workflow-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.link-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 4px 2px;
+  cursor: pointer;
+}
+
+.settings-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 18px 0;
+}
 
 .overlay {
   position: fixed;

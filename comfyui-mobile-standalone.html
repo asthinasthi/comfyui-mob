@@ -317,6 +317,43 @@ select {
   margin-top: 60px;
   font-size: 0.95rem;
 }
+.empty-state p { margin: 0 0 16px; }
+.empty-state .btn { display: inline-block; width: auto; }
+
+/* Compact current-workflow row at the top of the generation form */
+.workflow-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.workflow-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.link-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 4px 2px;
+  cursor: pointer;
+}
+
+.settings-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 18px 0;
+}
 
 .overlay {
   position: fixed;
@@ -432,22 +469,13 @@ code {
 
 <main id="app">
 
-  <!-- Workflow picker -->
-  <section class="card">
-    <div class="card-row">
-      <label class="field-label" for="workflowSelect">Workflow</label>
-      <select id="workflowSelect"></select>
-    </div>
-    <div class="card-row buttons-row">
-      <button class="btn secondary" id="importWorkflowBtn">Import…</button>
-      <button class="btn secondary danger" id="deleteWorkflowBtn">Delete</button>
-      <input type="file" id="workflowFileInput" accept="application/json,.json" hidden>
-    </div>
-    <p class="hint" id="workflowHint">Import a workflow exported from ComfyUI in <b>API format</b> (Save (API Format), with dev mode enabled).</p>
-  </section>
-
   <!-- Generation form -->
   <section class="card" id="genForm" hidden>
+    <div class="workflow-bar">
+      <span class="workflow-name" id="currentWorkflowLabel"></span>
+      <button class="link-btn" id="changeWorkflowBtn">Change</button>
+    </div>
+
     <div class="field">
       <label class="field-label" for="positivePrompt">Prompt</label>
       <textarea id="positivePrompt" rows="3" placeholder="A photo of…"></textarea>
@@ -533,7 +561,10 @@ code {
     <div class="gallery" id="gallery"></div>
   </section>
 
-  <p class="empty-state" id="emptyState">Import a workflow to get started.</p>
+  <div class="empty-state" id="emptyState">
+    <p>No workflow loaded yet.</p>
+    <button class="btn secondary" id="emptyImportBtn">Import a workflow…</button>
+  </div>
 
 </main>
 
@@ -565,6 +596,20 @@ code {
       <h2>Settings</h2>
       <button class="icon-btn" id="closeSettingsBtn" aria-label="Close">✕</button>
     </div>
+
+    <div class="field">
+      <label class="field-label" for="workflowSelect">Workflow</label>
+      <select id="workflowSelect"></select>
+    </div>
+    <div class="card-row buttons-row">
+      <button class="btn secondary" id="importWorkflowBtn">Import…</button>
+      <button class="btn secondary danger" id="deleteWorkflowBtn">Delete</button>
+      <input type="file" id="workflowFileInput" accept="application/json,.json" hidden>
+    </div>
+    <p class="hint" id="workflowHint">Import a workflow exported from ComfyUI in <b>API format</b> (Save (API Format), with dev mode enabled).</p>
+
+    <hr class="settings-divider">
+
     <div class="field">
       <label class="field-label" for="addressSelect">Saved addresses</label>
       <select id="addressSelect"></select>
@@ -704,6 +749,9 @@ const importWorkflowBtn = $("importWorkflowBtn");
 const deleteWorkflowBtn = $("deleteWorkflowBtn");
 const workflowFileInput = $("workflowFileInput");
 const workflowHint = $("workflowHint");
+const currentWorkflowLabel = $("currentWorkflowLabel");
+const changeWorkflowBtn = $("changeWorkflowBtn");
+const emptyImportBtn = $("emptyImportBtn");
 
 const genForm = $("genForm");
 const positivePrompt = $("positivePrompt");
@@ -1073,6 +1121,7 @@ function loadWorkflowIntoForm(name) {
   emptyState.hidden = true;
   genForm.hidden = false;
   generateBtn.disabled = false;
+  currentWorkflowLabel.textContent = name;
   rawJsonArea.value = JSON.stringify(wf, null, 2);
 
   if (analysis.positiveId) {
@@ -1122,9 +1171,14 @@ function loadWorkflowIntoForm(name) {
   if (baseUrl()) populateDynamicOptions();
 }
 
-workflowSelect.addEventListener("change", () => loadWorkflowIntoForm(workflowSelect.value));
+workflowSelect.addEventListener("change", () => {
+  loadWorkflowIntoForm(workflowSelect.value);
+  closeSettings(); // user picked one — show it
+});
 
 importWorkflowBtn.addEventListener("click", () => workflowFileInput.click());
+emptyImportBtn.addEventListener("click", () => workflowFileInput.click());
+changeWorkflowBtn.addEventListener("click", openSettings);
 
 workflowFileInput.addEventListener("change", async () => {
   const file = workflowFileInput.files[0];
@@ -1144,6 +1198,7 @@ workflowFileInput.addEventListener("change", async () => {
     refreshWorkflowSelect();
     workflowSelect.value = name;
     loadWorkflowIntoForm(name);
+    closeSettings(); // reveal the freshly loaded form
   } catch (err) {
     alert(`Couldn't import workflow: ${err.message}`);
   } finally {

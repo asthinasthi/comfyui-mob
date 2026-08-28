@@ -108,6 +108,9 @@ const importWorkflowBtn = $("importWorkflowBtn");
 const deleteWorkflowBtn = $("deleteWorkflowBtn");
 const workflowFileInput = $("workflowFileInput");
 const workflowHint = $("workflowHint");
+const currentWorkflowLabel = $("currentWorkflowLabel");
+const changeWorkflowBtn = $("changeWorkflowBtn");
+const emptyImportBtn = $("emptyImportBtn");
 
 const genForm = $("genForm");
 const positivePrompt = $("positivePrompt");
@@ -477,6 +480,7 @@ function loadWorkflowIntoForm(name) {
   emptyState.hidden = true;
   genForm.hidden = false;
   generateBtn.disabled = false;
+  currentWorkflowLabel.textContent = name;
   rawJsonArea.value = JSON.stringify(wf, null, 2);
 
   if (analysis.positiveId) {
@@ -526,9 +530,14 @@ function loadWorkflowIntoForm(name) {
   if (baseUrl()) populateDynamicOptions();
 }
 
-workflowSelect.addEventListener("change", () => loadWorkflowIntoForm(workflowSelect.value));
+workflowSelect.addEventListener("change", () => {
+  loadWorkflowIntoForm(workflowSelect.value);
+  closeSettings(); // user picked one — show it
+});
 
 importWorkflowBtn.addEventListener("click", () => workflowFileInput.click());
+emptyImportBtn.addEventListener("click", () => workflowFileInput.click());
+changeWorkflowBtn.addEventListener("click", openSettings);
 
 workflowFileInput.addEventListener("change", async () => {
   const file = workflowFileInput.files[0];
@@ -548,6 +557,7 @@ workflowFileInput.addEventListener("change", async () => {
     refreshWorkflowSelect();
     workflowSelect.value = name;
     loadWorkflowIntoForm(name);
+    closeSettings(); // reveal the freshly loaded form
   } catch (err) {
     alert(`Couldn't import workflow: ${err.message}`);
   } finally {
