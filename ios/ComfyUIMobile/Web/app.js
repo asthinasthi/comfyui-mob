@@ -1042,6 +1042,53 @@ generateBtn.addEventListener("click", async () => {
   }
 });
 
+// ---------- pin lock ----------
+// NOTE: a hardcoded client-side PIN is a light "keep others out" gate, not real
+// security — the code is delivered to the browser. The real access boundary is
+// Tailscale. Change APP_PIN to update the code.
+const APP_PIN = "0007";
+const lockScreen = $("lockScreen");
+const pinInput = $("pinInput");
+const lockError = $("lockError");
+
+function lockApp() {
+  localStorage.removeItem("comfyMob.unlocked");
+  pinInput.value = "";
+  lockError.hidden = true;
+  lockScreen.hidden = false;
+  setTimeout(() => pinInput.focus(), 100);
+}
+
+function unlockApp() {
+  localStorage.setItem("comfyMob.unlocked", "yes");
+  lockScreen.hidden = true;
+}
+
+if (localStorage.getItem("comfyMob.unlocked") === "yes") {
+  lockScreen.hidden = true;
+} else {
+  lockScreen.hidden = false;
+  setTimeout(() => pinInput.focus(), 100);
+}
+
+pinInput.addEventListener("input", () => {
+  lockError.hidden = true;
+  if (pinInput.value.length === 4) {
+    if (pinInput.value === APP_PIN) {
+      pinInput.value = "";
+      unlockApp();
+    } else {
+      lockError.hidden = false;
+      pinInput.value = "";
+    }
+  }
+});
+
+$("lockAppBtn").addEventListener("click", () => {
+  closeSettings();
+  lockApp();
+});
+
 // ---------- init ----------
 
 (async function init() {

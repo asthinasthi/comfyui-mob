@@ -173,6 +173,7 @@ body {
 
 input[type="text"],
 input[type="number"],
+input[type="password"],
 select,
 textarea {
   width: 100%;
@@ -457,6 +458,41 @@ select {
   background: #262a33;
 }
 
+/* PIN lock screen */
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  padding-top: calc(24px + var(--safe-top));
+}
+.lock-box {
+  width: 100%;
+  max-width: 280px;
+  text-align: center;
+}
+.lock-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 18px;
+}
+.pin-input {
+  text-align: center;
+  font-size: 1.8rem;
+  letter-spacing: 0.5em;
+  padding: 14px 12px 14px 22px;
+}
+.lock-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin-top: 12px;
+}
+
 /* Input image picker */
 .input-image-row {
   display: flex;
@@ -548,6 +584,14 @@ code {
 </style>
 </head>
 <body>
+
+<div id="lockScreen" class="lock-screen">
+  <div class="lock-box">
+    <div class="lock-title">Enter PIN</div>
+    <input id="pinInput" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="PIN">
+    <p class="lock-error" id="lockError" hidden>Wrong PIN. Try again.</p>
+  </div>
+</div>
 
 <header class="topbar">
   <div class="topbar-title">
@@ -750,6 +794,10 @@ code {
     </div>
     <p class="hint" id="connStatus"></p>
     <p class="hint">ComfyUI must be started with <code>--enable-cors-header</code> so this app (served from a different port) can call its API. See README.</p>
+
+    <hr class="settings-divider">
+
+    <button class="btn secondary" id="lockAppBtn">Lock app</button>
   </div>
 </div>
 
@@ -1805,6 +1853,53 @@ generateBtn.addEventListener("click", async () => {
     generateBtn.disabled = false;
     fetchQueueCounts(); // job left the queue (done/failed) — refresh the badge
   }
+});
+
+// ---------- pin lock ----------
+// NOTE: a hardcoded client-side PIN is a light "keep others out" gate, not real
+// security — the code is delivered to the browser. The real access boundary is
+// Tailscale. Change APP_PIN to update the code.
+const APP_PIN = "0007";
+const lockScreen = $("lockScreen");
+const pinInput = $("pinInput");
+const lockError = $("lockError");
+
+function lockApp() {
+  localStorage.removeItem("comfyMob.unlocked");
+  pinInput.value = "";
+  lockError.hidden = true;
+  lockScreen.hidden = false;
+  setTimeout(() => pinInput.focus(), 100);
+}
+
+function unlockApp() {
+  localStorage.setItem("comfyMob.unlocked", "yes");
+  lockScreen.hidden = true;
+}
+
+if (localStorage.getItem("comfyMob.unlocked") === "yes") {
+  lockScreen.hidden = true;
+} else {
+  lockScreen.hidden = false;
+  setTimeout(() => pinInput.focus(), 100);
+}
+
+pinInput.addEventListener("input", () => {
+  lockError.hidden = true;
+  if (pinInput.value.length === 4) {
+    if (pinInput.value === APP_PIN) {
+      pinInput.value = "";
+      unlockApp();
+    } else {
+      lockError.hidden = false;
+      pinInput.value = "";
+    }
+  }
+});
+
+$("lockAppBtn").addEventListener("click", () => {
+  closeSettings();
+  lockApp();
 });
 
 // ---------- init ----------

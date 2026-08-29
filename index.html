@@ -10,9 +10,17 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ComfyUI">
 <meta name="theme-color" content="#0f1115">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
+
+<div id="lockScreen" class="lock-screen">
+  <div class="lock-box">
+    <div class="lock-title">Enter PIN</div>
+    <input id="pinInput" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="PIN">
+    <p class="lock-error" id="lockError" hidden>Wrong PIN. Try again.</p>
+  </div>
+</div>
 
 <header class="topbar">
   <div class="topbar-title">
@@ -215,6 +223,10 @@
     </div>
     <p class="hint" id="connStatus"></p>
     <p class="hint">ComfyUI must be started with <code>--enable-cors-header</code> so this app (served from a different port) can call its API. See README.</p>
+
+    <hr class="settings-divider">
+
+    <button class="btn secondary" id="lockAppBtn">Lock app</button>
   </div>
 </div>
 
@@ -227,6 +239,6 @@
   </div>
 </div>
 
-<script src="app.js?v=9"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>

@@ -162,6 +162,7 @@ body {
 
 input[type="text"],
 input[type="number"],
+input[type="password"],
 select,
 textarea {
   width: 100%;
@@ -444,6 +445,41 @@ select {
 
 .suggest-list li:active {
   background: #262a33;
+}
+
+/* PIN lock screen */
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  padding-top: calc(24px + var(--safe-top));
+}
+.lock-box {
+  width: 100%;
+  max-width: 280px;
+  text-align: center;
+}
+.lock-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 18px;
+}
+.pin-input {
+  text-align: center;
+  font-size: 1.8rem;
+  letter-spacing: 0.5em;
+  padding: 14px 12px 14px 22px;
+}
+.lock-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin-top: 12px;
 }
 
 /* Input image picker */
