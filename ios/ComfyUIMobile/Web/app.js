@@ -81,6 +81,7 @@ let addressHistory = loadAddressHistory();
 let media = loadMedia();
 let currentWorkflowName = null;
 let analysis = null; // result of analyzeWorkflow()
+let selectedImageFile = null; // pending input image chosen for a LoadImage workflow
 let clientId = localStorage.getItem("comfyMob.clientId");
 if (!clientId) {
   clientId = crypto.randomUUID();
@@ -123,6 +124,11 @@ const widthInput = $("widthInput");
 const heightInput = $("heightInput");
 const durationField = $("durationField");
 const durationInput = $("durationInput");
+const inputImageField = $("inputImageField");
+const inputImageInput = $("inputImageInput");
+const inputImagePreview = $("inputImagePreview");
+const inputImageName = $("inputImageName");
+const pickImageBtn = $("pickImageBtn");
 const samplerField = $("samplerField");
 const samplerSelect = $("samplerSelect");
 const schedulerSelect = $("schedulerSelect");
@@ -348,12 +354,20 @@ function analyzeWorkflow(wf) {
     checkpointId: null,
     checkpointClass: null,
     durationId: null,
+    loadImageId: null,
   };
 
   // video API nodes (e.g. MiniMax) expose duration directly in seconds, independent of any KSampler
   result.durationId = ids.find((id) => {
     const node = wf[id];
     return (node.class_type || "").startsWith("Minimax") && node.inputs && "duration" in node.inputs;
+  }) || null;
+
+  // a LoadImage node lets the user supply an input image (img2img, image-to-video).
+  // Its `image` input is a plain filename string in ComfyUI's input/ dir.
+  result.loadImageId = ids.find((id) => {
+    const node = wf[id];
+    return node.class_type === "LoadImage" && node.inputs && typeof node.inputs.image === "string";
   }) || null;
 
   if (!ksamplerId) return result;
@@ -524,6 +538,18 @@ function loadWorkflowIntoForm(name) {
     durationField.hidden = true;
   }
 
+  // reset any pending image selection when (re)loading a workflow
+  selectedImageFile = null;
+  inputImagePreview.hidden = true;
+  inputImagePreview.removeAttribute("src");
+  if (analysis.loadImageId) {
+    const existing = wf[analysis.loadImageId].inputs.image;
+    inputImageName.textContent = existing ? `Current: ${existing}` : "No image selected";
+    inputImageField.hidden = false;
+  } else {
+    inputImageField.hidden = true;
+  }
+
   if (analysis.ksamplerId) {
     const node = wf[analysis.ksamplerId];
     stepsInput.value = node.inputs.steps ?? "";
@@ -543,6 +569,32 @@ function loadWorkflowIntoForm(name) {
   checkpointField.hidden = true;
   samplerField.hidden = true;
   if (baseUrl()) populateDynamicOptions();
+}
+
+// ---------- input image ----------
+
+pickImageBtn.addEventListener("click", () => inputImageInput.click());
+
+inputImageInput.addEventListener("change", () => {
+  const file = inputImageInput.files[0];
+  if (!file) return;
+  selectedImageFile = file;
+  inputImageName.textContent = file.name;
+  const url = URL.createObjectURL(file);
+  if (inputImagePreview.src) URL.revokeObjectURL(inputImagePreview.src);
+  inputImagePreview.src = url;
+  inputImagePreview.hidden = false;
+  inputImageInput.value = "";
+});
+
+async function uploadImage(file) {
+  const form = new FormData();
+  form.append("image", file, file.name);
+  form.append("overwrite", "true");
+  const res = await fetch(`${baseUrl()}/upload/image`, { method: "POST", mode: "cors", body: form });
+  if (!res.ok) throw new Error(`Image upload failed (HTTP ${res.status})`);
+  const data = await res.json();
+  return data.subfolder ? `${data.subfolder}/${data.name}` : data.name;
 }
 
 workflowSelect.addEventListener("change", () => {
@@ -592,10 +644,13 @@ deleteWorkflowBtn.addEventListener("click", () => {
 
 // ---------- generate ----------
 
-function buildPatchedWorkflow() {
+function buildPatchedWorkflow(uploadedImageName) {
   // Start from the raw JSON textarea, so manual edits there are respected.
   const wf = JSON.parse(rawJsonArea.value);
 
+  if (analysis.loadImageId && wf[analysis.loadImageId] && uploadedImageName) {
+    wf[analysis.loadImageId].inputs.image = uploadedImageName;
+  }
   if (analysis.positiveId && wf[analysis.positiveId]) {
     wf[analysis.positiveId].inputs.text = positivePrompt.value;
   }
@@ -965,7 +1020,13 @@ generateBtn.addEventListener("click", async () => {
   progressCard.hidden = false;
   progressText.textContent = "Queuing…";
   try {
-    const wf = buildPatchedWorkflow();
+    let uploadedImageName = null;
+    if (analysis.loadImageId && selectedImageFile) {
+      progressText.textContent = "Uploading image…";
+      uploadedImageName = await uploadImage(selectedImageFile);
+    }
+    const wf = buildPatchedWorkflow(uploadedImageName);
+    progressText.textContent = "Queuing…";
     const promptId = await queuePrompt(wf);
     fetchQueueCounts(); // reflect the just-submitted job on the Queue tab badge
     const entry = await pollHistory(promptId);

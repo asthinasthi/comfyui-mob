@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ComfyUI">
 <meta name="theme-color" content="#0f1115">
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
@@ -35,6 +35,18 @@
     <div class="workflow-bar">
       <span class="workflow-name" id="currentWorkflowLabel"></span>
       <button class="link-btn" id="changeWorkflowBtn">Change</button>
+    </div>
+
+    <div class="field" id="inputImageField" hidden>
+      <label class="field-label">Input image</label>
+      <div class="input-image-row">
+        <img id="inputImagePreview" class="input-image-preview" hidden alt="Input image preview">
+        <div class="input-image-meta">
+          <span id="inputImageName" class="input-image-name">No image selected</span>
+          <button type="button" class="btn secondary" id="pickImageBtn">Choose image…</button>
+        </div>
+      </div>
+      <input type="file" id="inputImageInput" accept="image/*" hidden>
     </div>
 
     <div class="field">
@@ -215,6 +227,6 @@
   </div>
 </div>
 
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>
