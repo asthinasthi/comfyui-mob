@@ -186,8 +186,8 @@ function setActiveTab(name) {
   stopQueuePolling();
   if (isQueue) startQueuePolling();
   if (isExp) {
-    renderMediaGrid();
-    if (media.length === 0 && baseUrl()) refreshMediaFromComfy();
+    renderMediaGrid(); // show what's cached immediately…
+    if (baseUrl()) refreshMediaFromComfy(); // …then merge in the server's latest, incl. jobs from other clients (Home PC)
   }
 }
 

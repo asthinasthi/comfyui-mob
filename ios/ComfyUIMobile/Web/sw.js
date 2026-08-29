@@ -1,12 +1,12 @@
 // Bump CACHE_VERSION whenever the app shell (html/css/js/icons) changes so
 // clients drop the old cache and fetch fresh copies.
-const CACHE_VERSION = "comfyui-mob-v7";
+const CACHE_VERSION = "comfyui-mob-v8";
 
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css?v=7",
-  "./app.js?v=7",
+  "./style.css?v=8",
+  "./app.js?v=8",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
